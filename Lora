@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lora's Schedule</title>
+    <style>
+        body { 
+            font-family: -apple-system;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        .header {
+            background: #1a365d;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            max-width: 600px;
+        }
+        .day {
+            background: white;
+            border-radius: 10px;
+            margin: 0 auto 15px;
+            max-width: 600px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .date {
+            padding: 15px;
+            font-weight: bold;
+            background: #f8fafc;
+            border-bottom: 1px solid #eee;
+        }
+        .class {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .class:hover {
+            background: #f8fafc;
+        }
+        .status {
+            width: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Lora's Schedule | جدول لورا</h1>
+        <p>Until 23/12/2024</p>
+    </div>
+    <div id="schedule"></div>
+
+    <script>
+        const classes = {
+            monWed: [
+                { time: "09:30 - 10:30", name: "Lecture 1 | المحاضرة الأولى" },
+                { time: "11:00 - 14:15", name: "Lecture 2 | المحاضرة الثانية" }
+            ],
+            tueThu: [
+                { time: "11:00 - 11:45", name: "Lecture 1 | المحاضرة الأولى" },
+                { time: "14:00 - 15:00", name: "Lecture 2 | المحاضرة الثانية" }
+            ]
+        };
+
+        function generateDates() {
+            const dates = [];
+            const start = new Date();
+            const end = new Date('2024-12-23');
+            const current = new Date(start);
+
+            while (current <= end) {
+                const day = current.getDay();
+                if ([1,2,3,4].includes(day)) {
+                    dates.push({
+                        date: new Date(current),
+                        classes: [1,3].includes(day) ? classes.monWed : classes.tueThu
+                    });
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
+        function formatDate(date) {
+            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${days[date.getDay()]} - ${day}/${month}/${year}`;
+        }
+
+        function createSchedule() {
+            const container = document.getElementById('schedule');
+            generateDates().forEach((day, dayIdx) => {
+                const block = document.createElement('div');
+                block.className = 'day';
+                
+                block.innerHTML = `
+                    <div class="date">${formatDate(day.date)}</div>
+                    ${day.classes.map((cls, clsIdx) => `
+                        <div class="class" onclick="toggleStatus('${dayIdx}-${clsIdx}')">
+                            <div>${cls.time}</div>
+                            <div>${cls.name}</div>
+                            <div class="status" id="status-${dayIdx}-${clsIdx}">○</div>
+                        </div>
+                    `).join('')}
+                `;
+                container.appendChild(block);
+            });
+        }
+
+        function toggleStatus(id) {
+            const status = document.getElementById(`status-${id}`);
+            status.textContent = status.textContent === '○' ? '✓' : 
+                               status.textContent === '✓' ? '✗' : '○';
+            localStorage.setItem(`attendance-${id}`, status.textContent);
+        }
+
+        function loadSavedStatus() {
+            document.querySelectorAll('.status').forEach(element => {
+                const saved = localStorage.getItem(`attendance-${element.id.replace('status-', '')}`);
+                if (saved) element.textContent = saved;
+            });
+        }
+
+        createSchedule();
+        loadSavedStatus();
+    </script>
+</body>
+</html>
