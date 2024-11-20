@@ -52,8 +52,11 @@
 </head>
 <body>
     <div class="header">
-        <h1>Lora's Schedule | جدول لورا الكسلااانه</h1>
+        <h1>Lora's Schedule | جدول لورا</h1>
         <p>Until 23/12/2024</p>
+        <button onclick="saveAttendance()">Save Progress</button>
+        <input type="file" id="fileInput" onchange="loadAttendance()" style="display:none;">
+        <button onclick="document.getElementById('fileInput').click()">Load Progress</button>
     </div>
     <div id="schedule"></div>
 
@@ -120,18 +123,39 @@
             const status = document.getElementById(`status-${id}`);
             status.textContent = status.textContent === '○' ? '✓' : 
                                status.textContent === '✓' ? '✗' : '○';
-            localStorage.setItem(`attendance-${id}`, status.textContent);
         }
 
-        function loadSavedStatus() {
+        function saveAttendance() {
+            const statuses = {};
             document.querySelectorAll('.status').forEach(element => {
-                const saved = localStorage.getItem(`attendance-${element.id.replace('status-', '')}`);
-                if (saved) element.textContent = saved;
+                statuses[element.id] = element.textContent;
             });
+            const blob = new Blob([JSON.stringify(statuses)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'attendance.json';
+            link.click();
+        }
+
+        function loadAttendance() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const statuses = JSON.parse(event.target.result);
+                for (const id in statuses) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = statuses[id];
+                    }
+                }
+            };
+            reader.readAsText(file);
         }
 
         createSchedule();
-        loadSavedStatus();
     </script>
 </body>
 </html>
